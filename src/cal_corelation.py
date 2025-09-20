@@ -169,6 +169,53 @@ def compute_epoch_correlations(
     return out_df
 
 
+def compute_total_correlation(
+    infl_csv: str = INFL_PATH,
+    loo_csv: str = LOO_PATH,
+    invert_loo: bool = True,
+    invert_infl: bool = False,
+) -> Dict[str, float]:
+    infl_df = _read_with_index(infl_csv)
+    loo_df = _read_with_index(loo_csv)
+
+    infl_epochs = _extract_epoch_map(infl_df, prefix="influence_epoch_")
+    loo_epochs = _extract_epoch_map(loo_df, prefix="epoch_")
+
+    common_epochs = sorted(set(infl_epochs.keys()) & set(loo_epochs.keys()))
+    if not common_epochs:
+        raise ValueError("No common epochs found between influence data and LOO valuations.")
+
+    common_index = infl_df.index.intersection(loo_df.index)
+    if common_index.empty:
+        raise ValueError("No overlapping sample indices between influence data and LOO valuations.")
+
+    infl_cols = [infl_epochs[e] for e in common_epochs]
+    loo_cols = [loo_epochs[e] for e in common_epochs]
+
+    infl_total = infl_df.loc[common_index, infl_cols].astype(float).sum(axis=1)
+    if invert_infl:
+        infl_total = -infl_total
+
+    loo_total = loo_df.loc[common_index, loo_cols].astype(float).sum(axis=1)
+    if invert_loo:
+        loo_total = -loo_total
+
+    x = infl_total.to_numpy()
+    y = loo_total.to_numpy()
+
+    pear = _safe_corr_pearson(x, y)
+    spear = _safe_corr_spearman(x, y)
+    kend = _safe_corr_kendall(x, y)
+    j30 = _jaccard_top_k(infl_total, loo_total, frac=0.3)
+
+    return {
+        "pearson": pear,
+        "spearman": spear,
+        "kendall": kend,
+        "jaccard_top30pct": j30,
+    }
+
+
 def main() -> None:
     # DVE vs LOO (invert LOO)
     df_dve = compute_epoch_correlations(infl_csv=INFL_PATH, loo_csv=LOO_PATH, invert_loo=True)
@@ -194,6 +241,33 @@ def main() -> None:
     pd.set_option("display.max_columns", None)
     print(df_all.to_string(index=False))
 
+    total_rows = [
+        {"source": "dve", **compute_total_correlation(infl_csv=INFL_PATH, loo_csv=LOO_PATH, invert_loo=True)},
+        {"source": "tim", **compute_total_correlation(infl_csv=TIM_INFL_PATH, loo_csv=LOO_PATH, invert_loo=True)},
+        {
+            "source": "lava",
+            **compute_total_correlation(
+                infl_csv=LAVA_INFL_PATH,
+                loo_csv=LOO_PATH,
+                invert_loo=True,
+                invert_infl=True,
+            ),
+        },
+        {
+            "source": "icml",
+            **compute_total_correlation(
+                infl_csv=ICML_INFL_PATH,
+                loo_csv=LOO_PATH,
+                invert_loo=True,
+                invert_infl=True,
+            ),
+        },
+    ]
+    df_total = pd.DataFrame(total_rows)
+
+    print("\nSum-over-epochs correlations versus LOO:")
+    print(df_total.to_string(index=False))
+
     # Save to CSV under project ./output directory
     out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "output"))
     os.makedirs(out_dir, exist_ok=True)
@@ -203,13 +277,16 @@ def main() -> None:
     out_lava = os.path.join(out_dir, "epoch_correlation_lava.csv")
     out_icml = os.path.join(out_dir, "epoch_correlation_icml.csv")
     out_all = os.path.join(out_dir, "epoch_correlation_all.csv")
+    out_total = os.path.join(out_dir, "sum_epoch_correlation_all.csv")
 
     df_dve.drop(columns=["source"]).to_csv(out_dve, index=False)
     df_tim.drop(columns=["source"]).to_csv(out_tim, index=False)
     df_lava.drop(columns=["source"]).to_csv(out_lava, index=False)
     df_icml.drop(columns=["source"]).to_csv(out_icml, index=False)
     df_all.to_csv(out_all, index=False)
+    df_total.to_csv(out_total, index=False)
     print(f"Saved results to: {out_all}")
+    print(f"Saved summed-epoch correlations to: {out_total}")
 
 
 if __name__ == "__main__":
