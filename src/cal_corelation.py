@@ -39,6 +39,16 @@ LOO_PATH = os.path.abspath(
     )
 )
 
+LAVA_INFL_PATH = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "data",
+        "mnsit_256",
+        "infl_lava_all_epochs_relabel_000_pct_042.csv",
+    )
+)
+
 
 def _read_with_index(csv_path: str) -> pd.DataFrame:
     df = pd.read_csv(csv_path)
@@ -104,7 +114,8 @@ def _jaccard_top_k(x: pd.Series, y: pd.Series, frac: float = 0.3) -> float:
 def compute_epoch_correlations(
     infl_csv: str = INFL_PATH,
     loo_csv: str = LOO_PATH,
-    invert_infl: bool = True,
+    invert_loo: bool = True,
+    invert_infl: bool = False,
 ) -> pd.DataFrame:
     infl_df = _read_with_index(infl_csv)
     loo_df = _read_with_index(loo_csv)
@@ -123,6 +134,8 @@ def compute_epoch_correlations(
         if invert_infl:
             s1 = -s1
         s2 = loo_df.loc[common_index, loo_epochs[e]].astype(float)
+        if invert_loo:
+            s2 = -s2
 
         x = s1.to_numpy()
         y = s2.to_numpy()
@@ -147,16 +160,20 @@ def compute_epoch_correlations(
 
 
 def main() -> None:
-    # DVE vs LOO (invert DVE)
-    df_dve = compute_epoch_correlations(infl_csv=INFL_PATH, loo_csv=LOO_PATH, invert_infl=True)
+    # DVE vs LOO (invert LOO)
+    df_dve = compute_epoch_correlations(infl_csv=INFL_PATH, loo_csv=LOO_PATH, invert_loo=True)
     df_dve.insert(0, "source", "dve")
 
-    # TIM vs LOO (invert as requested)
-    df_tim = compute_epoch_correlations(infl_csv=TIM_INFL_PATH, loo_csv=LOO_PATH, invert_infl=True)
+    # TIM vs LOO (invert LOO)
+    df_tim = compute_epoch_correlations(infl_csv=TIM_INFL_PATH, loo_csv=LOO_PATH, invert_loo=True)
     df_tim.insert(0, "source", "tim")
 
+    # LAVA vs LOO (invert LOO and LAVA)
+    df_lava = compute_epoch_correlations(infl_csv=LAVA_INFL_PATH, loo_csv=LOO_PATH, invert_loo=True, invert_infl=True)
+    df_lava.insert(0, "source", "lava")
+
     # Combined
-    df_all = pd.concat([df_dve, df_tim], ignore_index=True)
+    df_all = pd.concat([df_dve, df_tim, df_lava], ignore_index=True)
 
     # Print nicely
     pd.set_option("display.width", 200)
@@ -169,10 +186,12 @@ def main() -> None:
 
     out_dve = os.path.join(out_dir, "epoch_correlation_dve.csv")
     out_tim = os.path.join(out_dir, "epoch_correlation_tim.csv")
+    out_lava = os.path.join(out_dir, "epoch_correlation_lava.csv")
     out_all = os.path.join(out_dir, "epoch_correlation_all.csv")
 
     df_dve.drop(columns=["source"]).to_csv(out_dve, index=False)
     df_tim.drop(columns=["source"]).to_csv(out_tim, index=False)
+    df_lava.drop(columns=["source"]).to_csv(out_lava, index=False)
     df_all.to_csv(out_all, index=False)
     print(f"Saved results to: {out_all}")
 
