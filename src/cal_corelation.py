@@ -49,6 +49,16 @@ LAVA_INFL_PATH = os.path.abspath(
     )
 )
 
+ICML_INFL_PATH = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "data",
+        "mnsit_256",
+        "infl_icml_all_epochs_relabel_000_pct_042.csv",
+    )
+)
+
 
 def _read_with_index(csv_path: str) -> pd.DataFrame:
     df = pd.read_csv(csv_path)
@@ -172,8 +182,12 @@ def main() -> None:
     df_lava = compute_epoch_correlations(infl_csv=LAVA_INFL_PATH, loo_csv=LOO_PATH, invert_loo=True, invert_infl=True)
     df_lava.insert(0, "source", "lava")
 
+    # ICML vs LOO (invert LOO and ICML)
+    df_icml = compute_epoch_correlations(infl_csv=ICML_INFL_PATH, loo_csv=LOO_PATH, invert_loo=True, invert_infl=True)
+    df_icml.insert(0, "source", "icml")
+
     # Combined
-    df_all = pd.concat([df_dve, df_tim, df_lava], ignore_index=True)
+    df_all = pd.concat([df_dve, df_tim, df_lava, df_icml], ignore_index=True)
 
     # Print nicely
     pd.set_option("display.width", 200)
@@ -187,11 +201,13 @@ def main() -> None:
     out_dve = os.path.join(out_dir, "epoch_correlation_dve.csv")
     out_tim = os.path.join(out_dir, "epoch_correlation_tim.csv")
     out_lava = os.path.join(out_dir, "epoch_correlation_lava.csv")
+    out_icml = os.path.join(out_dir, "epoch_correlation_icml.csv")
     out_all = os.path.join(out_dir, "epoch_correlation_all.csv")
 
     df_dve.drop(columns=["source"]).to_csv(out_dve, index=False)
     df_tim.drop(columns=["source"]).to_csv(out_tim, index=False)
     df_lava.drop(columns=["source"]).to_csv(out_lava, index=False)
+    df_icml.drop(columns=["source"]).to_csv(out_icml, index=False)
     df_all.to_csv(out_all, index=False)
     print(f"Saved results to: {out_all}")
 
