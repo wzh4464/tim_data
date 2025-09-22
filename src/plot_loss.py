@@ -14,14 +14,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-DEFAULT_EXCLUDED_EPOCHS = (-1, 8, 9)
+DEFAULT_EXCLUDED_EPOCHS = (-1, 9)
 
 
 def _load_curves(
     data_dir: Path, excluded_epochs: Iterable[int]
 ) -> Dict[str, Dict[str, Sequence[float]]]:
     data: Dict[str, Dict[str, Sequence[float]]] = {}
-    skip_epochs = set(int(e) for e in excluded_epochs)
+    skip_epochs = {int(e) for e in excluded_epochs}
 
     for csv_path in sorted(data_dir.glob("*.csv")):
         method = csv_path.stem
@@ -31,8 +31,7 @@ def _load_curves(
             continue
 
         required = {"epoch", "train_loss"}
-        missing = required - set(df.columns)
-        if missing:
+        if missing := required - set(df.columns):
             raise ValueError(f"{csv_path} missing required columns: {missing}")
 
         if "val_accuracy" in df.columns:
