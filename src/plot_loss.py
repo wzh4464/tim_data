@@ -73,8 +73,10 @@ def _plot_curves(
     iclr_colors = ps.PALETTE_ICLR
     ps.apply_global_style()
 
-    # Prepare full epoch range for ticks
+    # Prepare full epoch range for ticks (accuracy uses shifted epochs e+1)
     epochs_all = sorted({e for m in methods for e in curves[m]["epoch"]})
+    epochs_all_shifted = sorted({e + 1 for e in epochs_all})
+    max_epoch_shifted = epochs_all_shifted[-1] if epochs_all_shifted else None
 
     # Test accuracy plot
     fig_acc, ax_acc = plt.subplots(figsize=ps.default_figsize())
@@ -86,9 +88,18 @@ def _plot_curves(
         ls = "--" if method.lower() == "origin" else "-"
         if method.lower() == "origin":
             color = ps.PALETTE_PRIMARY["grey"]
+        # accuracy: shift epochs by +1, then drop the last shifted point
+        shifted_pairs = [(e + 1, a) for e, a in zip(curve["epoch"], curve["test_accuracy"]) ]
+        if max_epoch_shifted is not None:
+            end_tick = max_epoch_shifted - 1
+            shifted_pairs = [(se, a) for se, a in shifted_pairs if se <= end_tick and se >= 1]
+        if shifted_pairs:
+            xs, ys = zip(*shifted_pairs)
+        else:
+            xs, ys = [], []
         ax_acc.plot(
-            curve["epoch"],
-            curve["test_accuracy"],
+            xs,
+            ys,
             marker=marker,
             color=color,
             linestyle=ls,
@@ -102,11 +113,14 @@ def _plot_curves(
     ax_acc.set_ylim(0.5, 0.9)
     ps.enable_axes_grid(ax_acc)
     # x-axis ticks every epoch (step=1)
-    if epochs_all:
-        min_e, max_e = epochs_all[0], epochs_all[-1]
-        ax_acc.set_xlim(min_e - 0.5, max_e + 0.5)
+    if epochs_all_shifted:
+        start_tick = 1
+        end_tick = epochs_all_shifted[-1] - 1 if len(epochs_all_shifted) > 0 else 1
+        if end_tick < start_tick:
+            end_tick = start_tick
+        ax_acc.set_xlim(start_tick - 0.5, end_tick + 0.5)
         ax_acc.xaxis.set_major_locator(MultipleLocator(1))
-        ax_acc.set_xticks(list(range(min_e, max_e + 1)))
+        ax_acc.set_xticks(list(range(start_tick, end_tick + 1)))
         ax_acc.tick_params(axis="x", rotation=0)
     ax_acc.legend(loc="lower right")
 
