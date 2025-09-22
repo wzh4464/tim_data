@@ -12,6 +12,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from . import plot_style as ps
+from matplotlib.ticker import MultipleLocator
 import pandas as pd
 
 
@@ -69,7 +70,11 @@ def _plot_curves(
 ) -> None:
     methods = sorted(curves)
     markers = ps.MARKERS
+    iclr_colors = ps.PALETTE_ICLR
     ps.apply_global_style()
+
+    # Prepare full epoch range for ticks
+    epochs_all = sorted({e for m in methods for e in curves[m]["epoch"]})
 
     # Test accuracy plot
     fig_acc, ax_acc = plt.subplots(figsize=ps.default_figsize())
@@ -77,20 +82,32 @@ def _plot_curves(
         curve = curves[method]
         marker = markers[idx % len(markers)]
         label = method.upper()
+        color = iclr_colors[idx % len(iclr_colors)]
+        ls = "--" if method.lower() == "origin" else "-"
+        if method.lower() == "origin":
+            color = ps.PALETTE_PRIMARY["grey"]
         ax_acc.plot(
             curve["epoch"],
             curve["test_accuracy"],
             marker=marker,
-            color=ps.PALETTE_PRIMARY["blue_dark" if idx % 2 else "blue_light"],
+            color=color,
+            linestyle=ls,
             label=label,
             zorder=2,
         )
 
-    ax_acc.set_title("Test Accuracy by Epoch")
+    # no title per requirement
     ax_acc.set_xlabel("Epoch")
     ax_acc.set_ylabel("Accuracy")
     ax_acc.set_ylim(0.5, 0.9)
     ps.enable_axes_grid(ax_acc)
+    # x-axis ticks every epoch (step=1)
+    if epochs_all:
+        min_e, max_e = epochs_all[0], epochs_all[-1]
+        ax_acc.set_xlim(min_e - 0.5, max_e + 0.5)
+        ax_acc.xaxis.set_major_locator(MultipleLocator(1))
+        ax_acc.set_xticks(list(range(min_e, max_e + 1)))
+        ax_acc.tick_params(axis="x", rotation=0)
     ax_acc.legend(loc="lower right")
 
     accuracy_path.parent.mkdir(parents=True, exist_ok=True)
@@ -104,25 +121,39 @@ def _plot_curves(
         curve = curves[method]
         marker = markers[idx % len(markers)]
         label = method.upper()
+        color = iclr_colors[idx % len(iclr_colors)]
+        ls = "--" if method.lower() == "origin" else "-"
+        if method.lower() == "origin":
+            color = ps.PALETTE_PRIMARY["grey"]
         ax_loss.plot(
             curve["epoch"],
             curve["train_loss"],
             marker=marker,
-            color=ps.PALETTE_PRIMARY["orange" if idx % 2 else "red_dark"],
+            color=color,
+            linestyle=ls,
             label=label,
             zorder=2,
         )
 
-    ax_loss.set_title("Training Loss by Epoch")
+    # no title per requirement
     ax_loss.set_xlabel("Epoch")
     ax_loss.set_ylabel("Loss")
     ps.enable_axes_grid(ax_loss)
+    # x-axis ticks every epoch (step=1)
+    if epochs_all:
+        min_e, max_e = epochs_all[0], epochs_all[-1]
+        ax_loss.set_xlim(min_e - 0.5, max_e + 0.5)
+        ax_loss.xaxis.set_major_locator(MultipleLocator(1))
+        ax_loss.set_xticks(list(range(min_e, max_e + 1)))
+        ax_loss.tick_params(axis="x", rotation=0)
     ax_loss.legend(loc=0)
 
     loss_path.parent.mkdir(parents=True, exist_ok=True)
     fig_loss.tight_layout()
     ps.savefig(str(loss_path))
     plt.close(fig_loss)
+
+    # moved tick setup earlier before saving figures
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:

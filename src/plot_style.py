@@ -11,11 +11,23 @@ PALETTE_PRIMARY = {
     "blue_dark": "#2c7bb6",
     "orange": "orange",
     "red_dark": "#d73027",
-    "grey": "grey",
-    "black": "black",
+    "grey": "#b0b0b0",
+    "black": "#000000",
 }
 
 GRADIENT_BLUES = ["#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cde"]
+
+# Okabe–Ito colorblind-safe palette (ICLR-friendly)
+PALETTE_ICLR = [
+    "#0072B2",  # blue
+    "#E69F00",  # orange
+    "#009E73",  # green
+    "#D55E00",  # vermillion
+    "#CC79A7",  # purple/pink
+    "#56B4E9",  # sky blue
+    "#F0E442",  # yellow
+    "#999999",  # grey
+]
 
 MARKERS = ["o", "^", "x", "s", "v", "1"]
 

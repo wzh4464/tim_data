@@ -90,15 +90,20 @@ def _plot_precision(data_df: pd.DataFrame, output_path: str) -> None:
 
     plt.figure(figsize=ps.default_figsize())
     markers = ps.MARKERS
+    iclr_colors = ps.PALETTE_ICLR
 
     for idx, (method, group) in enumerate(sorted(grouped, key=lambda item: item[0])):
         marker = markers[idx % len(markers)]
+        color = iclr_colors[idx % len(iclr_colors)]
         ordered = group.sort_values("interval_index")
+        linestyle = "--" if method.lower() == "origin" else "-"
+        color = ps.PALETTE_PRIMARY["grey"] if method.lower() == "origin" else color
         plt.plot(
             ordered["epoch_end"],
             ordered["precision"],
             marker=marker,
-            color=ps.PALETTE_PRIMARY["blue_dark" if idx % 2 else "blue_light"],
+            color=color,
+            linestyle=linestyle,
             label=method.upper(),
             linewidth=2,
             markersize=6,
@@ -107,9 +112,9 @@ def _plot_precision(data_df: pd.DataFrame, output_path: str) -> None:
 
     plt.xlabel("Epoch Intervals")
     plt.ylabel("Precision")
-    plt.title("Precision Comparison Across Methods")
-    plt.xticks(x_vals, x_labels, rotation=45)
-    plt.legend(loc=0)
+    # no title per requirement
+    plt.xticks(x_vals, x_labels, rotation=0)
+    plt.legend(loc="upper right", bbox_to_anchor=(1, 0.9))
     ps.enable_axes_grid(plt.gca())
     plt.tight_layout()
 
