@@ -1,4 +1,4 @@
-"""Plot training loss and validation accuracy curves from converge CSV files."""
+"""Plot training loss and test accuracy curves from converge CSV files."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def _plot_curves(
     methods = sorted(curves)
     markers = ["o", "s", "D", "^", "v", "P", "*", "X"]
 
-    # Validation accuracy plot
+    # Test accuracy plot
     fig_acc, ax_acc = plt.subplots(figsize=(6, 4.5))
     for idx, method in enumerate(methods):
         curve = curves[method]
@@ -77,7 +77,7 @@ def _plot_curves(
         label = method.upper()
         ax_acc.plot(curve["epoch"], curve["val_accuracy"], marker=marker, label=label)
 
-    ax_acc.set_title("Validation Accuracy by Epoch")
+    ax_acc.set_title("Test Accuracy by Epoch")
     ax_acc.set_xlabel("Epoch")
     ax_acc.set_ylabel("Accuracy")
     ax_acc.set_ylim(0.5, 1.0)
@@ -126,7 +126,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--accuracy-output",
         type=Path,
         default=default_accuracy_path,
-        help="Path to write the validation accuracy plot.",
+        help="Path to write the test accuracy plot.",
     )
     parser.add_argument(
         "--loss-output",
@@ -151,7 +151,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     _plot_curves(curves, args.accuracy_output, args.loss_output)
     rel_acc = os.path.relpath(args.accuracy_output, start=os.getcwd())
     rel_loss = os.path.relpath(args.loss_output, start=os.getcwd())
-    print(f"Wrote validation accuracy plot to {rel_acc}")
+    print(f"Wrote test accuracy plot to {rel_acc}")
     print(f"Wrote training loss plot to {rel_loss}")
 
 
