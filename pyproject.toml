@@ -13,6 +13,8 @@ dependencies = [
 
 [project.scripts]
 plot_precision = "src.plot_precision:main"
+plot_loss = "src.plot_loss:main"
+cal_corelation = "src.cal_corelation:main"
 
 [build-system]
 requires = ["hatchling"]
