@@ -34,8 +34,8 @@ def _load_curves(
         if missing := required - set(df.columns):
             raise ValueError(f"{csv_path} missing required columns: {missing}")
 
-        if "val_accuracy" in df.columns:
-            accuracy_col = "val_accuracy"
+        if "test_accuracy" in df.columns:
+            accuracy_col = "test_accuracy"
         elif "test_accuracy" in df.columns:
             accuracy_col = "test_accuracy"
         else:
@@ -51,7 +51,7 @@ def _load_curves(
 
         data[method] = {
             "epoch": df["epoch"].tolist(),
-            "val_accuracy": df[accuracy_col].tolist(),
+            "test_accuracy": df[accuracy_col].tolist(),
             "train_loss": df["train_loss"].tolist(),
         }
 
@@ -75,12 +75,12 @@ def _plot_curves(
         curve = curves[method]
         marker = markers[idx % len(markers)]
         label = method.upper()
-        ax_acc.plot(curve["epoch"], curve["val_accuracy"], marker=marker, label=label)
+        ax_acc.plot(curve["epoch"], curve["test_accuracy"], marker=marker, label=label)
 
     ax_acc.set_title("Test Accuracy by Epoch")
     ax_acc.set_xlabel("Epoch")
     ax_acc.set_ylabel("Accuracy")
-    ax_acc.set_ylim(0.5, 1.0)
+    ax_acc.set_ylim(0.5, 0.9)
     ax_acc.grid(True, linestyle="--", alpha=0.4)
     ax_acc.legend(loc="lower right")
 
@@ -113,7 +113,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     project_root = Path(__file__).resolve().parent.parent
     default_data_dir = project_root / "data" / "converge"
-    default_accuracy_path = project_root / "plots" / "val_accuracy.png"
+    default_accuracy_path = project_root / "plots" / "test_accuracy.png"
     default_loss_path = project_root / "plots" / "train_loss.png"
 
     parser.add_argument(
