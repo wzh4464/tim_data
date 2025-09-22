@@ -11,6 +11,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from . import plot_style as ps
 import pandas as pd
 
 
@@ -67,45 +68,60 @@ def _plot_curves(
     loss_path: Path,
 ) -> None:
     methods = sorted(curves)
-    markers = ["o", "s", "D", "^", "v", "P", "*", "X"]
+    markers = ps.MARKERS
+    ps.apply_global_style()
 
     # Test accuracy plot
-    fig_acc, ax_acc = plt.subplots(figsize=(6, 4.5))
+    fig_acc, ax_acc = plt.subplots(figsize=ps.default_figsize())
     for idx, method in enumerate(methods):
         curve = curves[method]
         marker = markers[idx % len(markers)]
         label = method.upper()
-        ax_acc.plot(curve["epoch"], curve["test_accuracy"], marker=marker, label=label)
+        ax_acc.plot(
+            curve["epoch"],
+            curve["test_accuracy"],
+            marker=marker,
+            color=ps.PALETTE_PRIMARY["blue_dark" if idx % 2 else "blue_light"],
+            label=label,
+            zorder=2,
+        )
 
     ax_acc.set_title("Test Accuracy by Epoch")
     ax_acc.set_xlabel("Epoch")
     ax_acc.set_ylabel("Accuracy")
     ax_acc.set_ylim(0.5, 0.9)
-    ax_acc.grid(True, linestyle="--", alpha=0.4)
+    ps.enable_axes_grid(ax_acc)
     ax_acc.legend(loc="lower right")
 
     accuracy_path.parent.mkdir(parents=True, exist_ok=True)
     fig_acc.tight_layout()
-    fig_acc.savefig(accuracy_path, dpi=200)
+    ps.savefig(str(accuracy_path))
     plt.close(fig_acc)
 
     # Training loss plot
-    fig_loss, ax_loss = plt.subplots(figsize=(6, 4.5))
+    fig_loss, ax_loss = plt.subplots(figsize=ps.default_figsize())
     for idx, method in enumerate(methods):
         curve = curves[method]
         marker = markers[idx % len(markers)]
         label = method.upper()
-        ax_loss.plot(curve["epoch"], curve["train_loss"], marker=marker, label=label)
+        ax_loss.plot(
+            curve["epoch"],
+            curve["train_loss"],
+            marker=marker,
+            color=ps.PALETTE_PRIMARY["orange" if idx % 2 else "red_dark"],
+            label=label,
+            zorder=2,
+        )
 
     ax_loss.set_title("Training Loss by Epoch")
     ax_loss.set_xlabel("Epoch")
     ax_loss.set_ylabel("Loss")
-    ax_loss.grid(True, linestyle="--", alpha=0.4)
-    ax_loss.legend()
+    ps.enable_axes_grid(ax_loss)
+    ax_loss.legend(loc=0)
 
     loss_path.parent.mkdir(parents=True, exist_ok=True)
     fig_loss.tight_layout()
-    fig_loss.savefig(loss_path, dpi=200)
+    ps.savefig(str(loss_path))
     plt.close(fig_loss)
 
 

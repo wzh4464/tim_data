@@ -5,6 +5,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from . import plot_style as ps
 import pandas as pd
 
 
@@ -80,14 +81,15 @@ def _plot_precision(data_df: pd.DataFrame, output_path: str) -> None:
     if data_df.empty:
         raise ValueError("Prepared data is empty; nothing to plot.")
 
+    ps.apply_global_style()
     grouped = data_df.groupby("method")
     anchor_name = grouped["interval_index"].max().idxmax()
     anchor_df = data_df[data_df["method"] == anchor_name].sort_values("interval_index")
     x_vals = anchor_df["epoch_end"].tolist()
     x_labels = anchor_df["interval_label"].tolist()
 
-    plt.figure(figsize=(10, 6))
-    markers = ["o", "s", "D", "^", "v", "P", "*", "X"]
+    plt.figure(figsize=ps.default_figsize())
+    markers = ps.MARKERS
 
     for idx, (method, group) in enumerate(sorted(grouped, key=lambda item: item[0])):
         marker = markers[idx % len(markers)]
@@ -95,24 +97,26 @@ def _plot_precision(data_df: pd.DataFrame, output_path: str) -> None:
         plt.plot(
             ordered["epoch_end"],
             ordered["precision"],
-            f"{marker}-",
+            marker=marker,
+            color=ps.PALETTE_PRIMARY["blue_dark" if idx % 2 else "blue_light"],
             label=method.upper(),
             linewidth=2,
             markersize=6,
+            zorder=2,
         )
 
     plt.xlabel("Epoch Intervals")
     plt.ylabel("Precision")
     plt.title("Precision Comparison Across Methods")
     plt.xticks(x_vals, x_labels, rotation=45)
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    plt.legend(loc=0)
+    ps.enable_axes_grid(plt.gca())
     plt.tight_layout()
 
     output_dir = os.path.dirname(output_path)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-    plt.savefig(output_path)
+    ps.savefig(output_path)
     plt.close()
 
 
