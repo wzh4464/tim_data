@@ -80,9 +80,9 @@ def _plot_curves(
     ax_acc.set_title("Validation Accuracy by Epoch")
     ax_acc.set_xlabel("Epoch")
     ax_acc.set_ylabel("Accuracy")
-    ax_acc.set_ylim(0, 1)
+    ax_acc.set_ylim(0.5, 1.0)
     ax_acc.grid(True, linestyle="--", alpha=0.4)
-    ax_acc.legend()
+    ax_acc.legend(loc="lower right")
 
     accuracy_path.parent.mkdir(parents=True, exist_ok=True)
     fig_acc.tight_layout()
