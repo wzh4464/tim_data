@@ -330,6 +330,29 @@ def compute_statistics_across_seeds(df: pd.DataFrame) -> pd.DataFrame:
     return stats_df.sort_values(["method", "epoch"]).reset_index(drop=True)
 
 
+def compute_seed_avg_then_method_stats(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    First, average correlation metrics over all epochs for each seed and method.
+    Then, compute the mean and variance of these averages across all seeds for each method.
+    """
+    # Exclude total correlations (epoch == -1) as they are not epoch-specific
+    epoch_df = df[df["epoch"] != -1].copy()
+
+    # Step 1: For each (seed, method), average correlations over all epochs
+    # These are the "所有 epoch 的平均值"
+    seed_avg_df = epoch_df.groupby(['seed', 'method'])[['pearson', 'spearman', 'kendall', 'jaccard_top30pct']].mean().reset_index()
+
+    # Step 2: For each method, compute mean and variance of the seed-averages
+    # This is the "计算这些平均值的平均值和方差"
+    final_stats = seed_avg_df.groupby('method')[['pearson', 'spearman', 'kendall', 'jaccard_top30pct']].agg(['mean', 'var']).reset_index()
+
+    # Flatten the multi-level column index for easier access
+    final_stats.columns = ['_'.join(col).strip() if col[1] else col[0] for col in final_stats.columns.values]
+    final_stats = final_stats.rename(columns={'method_': 'method'})
+
+    return final_stats
+
+
 def main() -> None:
     """Main function to compute multi-seed correlations and statistics."""
     try:
@@ -337,24 +360,26 @@ def main() -> None:
         print("Computing multi-seed correlations...")
         all_correlations = compute_multi_seed_correlations()
 
-        # Compute statistics across seeds
-        print("Computing statistics across seeds...")
+        # Compute statistics across seeds (original method)
+        print("Computing statistics across seeds (original method)...")
         stats_df = compute_statistics_across_seeds(all_correlations)
+
+        # --- NEW LOGIC AS PER YOUR REQUEST ---
+        print("\nComputing new statistics (seed-avg first, then method-avg)...")
+        # First, average over all epochs for each seed, then average those averages over all seeds.
+        new_stats_df = compute_seed_avg_then_method_stats(all_correlations)
+        # --- END OF NEW LOGIC ---
 
         # Create output directory
         out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "output"))
         os.makedirs(out_dir, exist_ok=True)
 
-        # Save results
+        # Save original results
         all_corr_path = os.path.join(out_dir, "multi_seed_all_correlations.csv")
         stats_path = os.path.join(out_dir, "multi_seed_correlation_statistics.csv")
-
-        # Extract and save sum correlations (epoch == -1)
         sum_correlations = all_correlations[all_correlations["epoch"] == -1].copy()
         sum_correlations = sum_correlations.drop(columns=["epoch"])
         sum_corr_path = os.path.join(out_dir, "sum_multi_seed_correlations.csv")
-
-        # Extract sum statistics
         sum_stats = stats_df[stats_df["epoch"] == -1].copy()
         sum_stats = sum_stats.drop(columns=["epoch"])
         sum_stats_path = os.path.join(out_dir, "sum_multi_seed_correlation_statistics.csv")
@@ -364,10 +389,16 @@ def main() -> None:
         sum_correlations.to_csv(sum_corr_path, index=False)
         sum_stats.to_csv(sum_stats_path, index=False)
 
-        # Display results
+        # --- NEW SAVE LOGIC ---
+        new_stats_path = os.path.join(out_dir, "seed_avg_then_method_stats.csv")
+        new_stats_df.to_csv(new_stats_path, index=False)
+        # --- END OF NEW SAVE LOGIC ---
+
+        # Display original results
         pd.set_option("display.width", 200)
         pd.set_option("display.max_columns", None)
 
+        print("\n--- Original Calculation Results ---")
         print("\nStatistics across seeds (mean ± std):")
         print(stats_df.to_string(index=False))
 
@@ -387,6 +418,13 @@ def main() -> None:
                 mean_val = row[f"{metric}_mean"]
                 std_val = row[f"{metric}_std"]
                 print(f"  {metric}: {mean_val:.4f} ± {std_val:.4f}")
+
+        # --- NEW PRINT LOGIC ---
+        print("\n\n--- New Calculation Results (as requested) ---")
+        print("Method: 1. Avg over all epochs for each seed. 2. Avg/Var of those averages across all seeds.")
+        print(new_stats_df.to_string(index=False))
+        print(f"\nSaved new statistics to: {new_stats_path}")
+        # --- END OF NEW PRINT LOGIC ---
 
     except Exception as e:
         print(f"Error: {e}")
