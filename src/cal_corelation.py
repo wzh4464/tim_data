@@ -14,7 +14,7 @@ INFL_PATH = os.path.abspath(
         os.path.dirname(__file__),
         "..",
         "data",
-        "mnsit_256",
+        "mnist_256",
         "infl_dve_all_epochs_relabel_000_pct_042.csv",
     )
 )
@@ -24,7 +24,7 @@ TIM_INFL_PATH = os.path.abspath(
         os.path.dirname(__file__),
         "..",
         "data",
-        "mnsit_256",
+        "mnist_256",
         "infl_tim_all_epochs_relabel_000_pct_042.csv",
     )
 )
@@ -34,7 +34,7 @@ LOO_PATH = os.path.abspath(
         os.path.dirname(__file__),
         "..",
         "data",
-        "mnsit_256",
+        "mnist_256",
         "loo_valuation_matrix.csv",
     )
 )
@@ -44,7 +44,7 @@ LAVA_INFL_PATH = os.path.abspath(
         os.path.dirname(__file__),
         "..",
         "data",
-        "mnsit_256",
+        "mnist_256",
         "infl_lava_all_epochs_relabel_000_pct_042.csv",
     )
 )
@@ -54,7 +54,7 @@ ICML_INFL_PATH = os.path.abspath(
         os.path.dirname(__file__),
         "..",
         "data",
-        "mnsit_256",
+        "mnist_256",
         "infl_icml_all_epochs_relabel_000_pct_042.csv",
     )
 )
