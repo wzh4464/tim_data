@@ -108,27 +108,43 @@ def _plot_precision_by_keep_ratio(keep_ratio: int, methods_data: Dict[str, pd.Da
     ps.apply_global_style()
     plt.figure(figsize=ps.default_figsize())
 
-    markers = ps.MARKERS
-    colors = ps.PALETTE_ICLR
+    # Fixed color and marker mapping for each method
+    method_styles = {
+        'dve': {'color': ps.PALETTE_ICLR[0], 'marker': 'o', 'linestyle': '-'},  # blue circle
+        'icml': {'color': ps.PALETTE_ICLR[1], 'marker': 'v', 'linestyle': '-'},  # orange v (IF)
+        'lava': {'color': ps.PALETTE_ICLR[2], 'marker': 'x', 'linestyle': '-'},  # pink/purple x
+        'origin': {'color': ps.PALETTE_PRIMARY['grey'], 'marker': 's', 'linestyle': '--'},  # grey square dashed
+        'tim': {'color': ps.PALETTE_ICLR[4], 'marker': '^', 'linestyle': '-'},  # green ^
+    }
 
-    for idx, (method, data) in enumerate(sorted(methods_data.items())):
-        if data.empty:
+    # Define legend order: TIM at top, origin at bottom
+    legend_order = ['tim', 'dve', 'icml', 'lava', 'origin']
+
+    # Plot methods in legend order to ensure consistent ordering
+    for method in legend_order:
+        if method not in methods_data or methods_data[method].empty:
             continue
 
-        marker = markers[idx % len(markers)]
-        color = colors[idx % len(colors)]
+        data = methods_data[method]
+        style = method_styles.get(method, {
+            'color': ps.PALETTE_ICLR[0],
+            'marker': 'o',
+            'linestyle': '-'
+        })
 
-        # Handle missing data gracefully
         epochs = data['epoch'].values
         precision = data['precision'].values
+
+        # Use 'IF' as display name for 'icml' method
+        display_name = 'IF' if method == 'icml' else method.upper()
 
         plt.plot(
             epochs,
             precision,
-            marker=marker,
-            color=color,
-            linestyle="-",
-            label=method.upper(),
+            marker=style['marker'],
+            color=style['color'],
+            linestyle=style['linestyle'],
+            label=display_name,
             linewidth=2,
             markersize=6,
             zorder=2,
