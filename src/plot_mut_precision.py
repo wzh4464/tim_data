@@ -108,9 +108,10 @@ def _plot_precision_by_keep_ratio(keep_ratio: int, methods_data: Dict[str, pd.Da
 
     ps.apply_global_style()
     # Enlarge fonts specifically for mut precision plots
-    plt.rcParams.update({"font.size": 22})
-    plt.rc("legend", fontsize=14)
-    plt.figure(figsize=ps.default_figsize())
+    plt.rcParams.update({"font.size": 30})
+    plt.rc("legend", fontsize=12)
+    # Fix figure size ratio to 6:5
+    plt.figure(figsize=(6, 5))
 
     # Fixed color and marker mapping for each method
     method_styles = {
