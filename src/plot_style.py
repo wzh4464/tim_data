@@ -21,15 +21,15 @@ GRADIENT_BLUES = ["#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cde"]
 PALETTE_ICLR = [
     "#0072B2",  # blue
     "#E69F00",  # orange
-    "#009E73",  # green
-    "#D55E00",  # vermillion
     "#CC79A7",  # purple/pink
+    "#D55E00",  # vermillion
+    "#009E73",  # green
     "#56B4E9",  # sky blue
     "#F0E442",  # yellow
     "#999999",  # grey
 ]
 
-MARKERS = ["o", "^", "x", "s", "v", "1"]
+MARKERS = ["o", "v", "x", "s", "^", "1"]
 
 
 def apply_global_style() -> None:

@@ -16,7 +16,7 @@ from matplotlib.ticker import MultipleLocator
 import pandas as pd
 
 
-DEFAULT_EXCLUDED_EPOCHS = (-1, 9)
+DEFAULT_EXCLUDED_EPOCHS = (9,)
 
 
 def _load_curves(
