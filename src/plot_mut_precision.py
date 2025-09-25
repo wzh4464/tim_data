@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 from . import plot_style as ps
 import pandas as pd
 
@@ -106,7 +107,11 @@ def _plot_precision_by_keep_ratio(keep_ratio: int, methods_data: Dict[str, pd.Da
         return
 
     ps.apply_global_style()
-    plt.figure(figsize=ps.default_figsize())
+    # Enlarge fonts specifically for mut precision plots
+    plt.rcParams.update({"font.size": 30})
+    plt.rc("legend", fontsize=12)
+    # Fix figure size ratio to 6:5
+    plt.figure(figsize=(6, 5))
 
     # Fixed color and marker mapping for each method
     method_styles = {
@@ -153,7 +158,19 @@ def _plot_precision_by_keep_ratio(keep_ratio: int, methods_data: Dict[str, pd.Da
     plt.xlabel("Epoch")
     plt.ylabel("Precision")
     # No title per requirement
-    plt.legend(loc="upper right", bbox_to_anchor=(1, 0.9))
+    plt.legend(loc=0)
+    # Ensure x-axis ticks are integers with step 1
+    all_epochs = []
+    for df in methods_data.values():
+        if not df.empty:
+            all_epochs.extend(df['epoch'].astype(int).tolist())
+    if all_epochs:
+        min_e, max_e = min(all_epochs), max(all_epochs)
+        ax = plt.gca()
+        ax.set_xlim(min_e - 0.5, max_e + 0.5)
+        ax.xaxis.set_major_locator(MultipleLocator(1))
+        ax.set_xticks(list(range(min_e, max_e + 1)))
+        ax.tick_params(axis="x", rotation=0)
     ps.enable_axes_grid(plt.gca())
     plt.tight_layout()
 
