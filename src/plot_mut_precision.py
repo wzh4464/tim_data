@@ -157,7 +157,7 @@ def _plot_precision_by_keep_ratio(keep_ratio: int, methods_data: Dict[str, pd.Da
     plt.xlabel("Epoch")
     plt.ylabel("Precision")
     # No title per requirement
-    plt.legend(loc="upper right", bbox_to_anchor=(1, 0.9))
+    plt.legend(loc=0)
     # Ensure x-axis ticks are integers with step 1
     all_epochs = []
     for df in methods_data.values():
